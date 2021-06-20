@@ -92,10 +92,13 @@ public class WebUtil {
     }
 
     public static String getAppHome() {
+        System.setProperty("app.home","/Users/heweiguo/develop/hadoop_runtime/streamx-console-service-1.1.0-SNAPSHOT");
         return System.getProperty("app.home");
     }
 
     public static String getAppDir(String dir) {
+        //System.out.println("=================="+dir);
+        System.out.println(getAppHome());
         return getAppHome().concat(File.separator).concat(dir);
     }
 }

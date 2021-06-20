@@ -41,6 +41,7 @@
     <resetpass v-if="name==='resetpass'"></resetpass>
     <sun v-if="name==='sun'"></sun>
     <moon v-if="name==='moon'"></moon>
+    <npit v-if="name==='npit'"></npit>
   </span>
 </template>
 
@@ -86,7 +87,8 @@ import {
   github,
   resetpass,
   sun,
-  moon
+  moon,
+  npit
 } from '@/core/icons'
 
 export default {
@@ -132,7 +134,8 @@ export default {
     github,
     resetpass,
     sun,
-    moon
+    moon,
+    npit
   },
   props: {
     name: {
@@ -183,5 +186,10 @@ export default {
 .svg-icon-large > svg {
   max-height: 50px !important;
   max-width: 50px !important;
+}
+
+.svg-icon-logosize > svg {
+  max-height: 80px !important;
+  max-width: 200px !important;
 }
 </style>

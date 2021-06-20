@@ -44,6 +44,7 @@ public class StreamXConsole {
 
     public static void main(String[] args) {
         SpringApplication application = new SpringApplication(StreamXConsole.class);
+        //SystemPropertyUtils.setAppHome("app.home",StreamXConsole.class);
         String pid = SystemPropertyUtils.get("pid");
         if (pid != null) {
             application.addListeners(new ApplicationPidFileWriter(pid));

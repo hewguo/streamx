@@ -2,13 +2,15 @@
   <div class="footer">
     <div class="links">
       <a
-        href="https://github.com/streamxhub/streamx"
+        href="http://www.nbport.com.cn"
         target="_blank">
-        <a-icon type="github" />
+
+        <s-icon name="npit" size="logosize"/>
+
       </a>
     </div>
     <div class="copyright">
-      Copyright<a-icon type="copyright" /> 2019~{{ year }} <span>StreamX</span>
+      Copyright<a-icon type="copyright" /> 2019~{{ year }} <span>NPIT</span>
     </div>
   </div>
 </template>

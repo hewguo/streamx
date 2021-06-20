@@ -29,7 +29,7 @@ export default {
   },
   data () {
     return {
-      logoImg: require('@assets/imgs/logo2.svg')
+      logoImg: require('@assets/imgs/npit.png')
     }
   },
   methods: {
@@ -37,11 +37,11 @@ export default {
       if(flag) {
         setTimeout(()=>{
           this.logoImg = require('@assets/imgs/logo.svg')
-        },50)
+        },100)
       } else {
         setTimeout(()=>{
-          this.logoImg = require('@assets/imgs/logo2.svg')
-        },50)
+          this.logoImg = require('@assets/imgs/npit.png')
+        },100)
       }
     }
   }

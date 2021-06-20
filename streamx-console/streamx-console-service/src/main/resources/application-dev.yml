@@ -34,8 +34,8 @@ spring:
       datasource:
         # 数据源-1，名称为 primary
         primary:
-          username: root
-          password: 123456
+          username: streamx
+          password: streamx
           driver-class-name: com.mysql.cj.jdbc.Driver
           url: jdbc:mysql://localhost:3306/streamx?useUnicode=true&characterEncoding=UTF-8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai
   aop.proxy-target-class: true

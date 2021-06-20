@@ -23,27 +23,6 @@
         <svg-icon name="question" size="small" class="icon"></svg-icon>
       </a>
 
-      <a
-        href="https://github.com/streamxhub/streamx"
-        title="GitHub"
-        target="_blank">
-        <svg-icon name="github" size="small" class="icon"></svg-icon>
-      </a>
-
-      <a
-        href="https://github.com/streamxhub/streamx"
-        title="GitHub"
-        target="_blank">
-        <img src="https://img.shields.io/github/stars/streamxhub/streamx.svg?sanitize=true" class="shields">
-      </a>
-
-      <a
-        href="https://github.com/streamxhub/streamx"
-        title="GitHub"
-        target="_blank">
-        <img src="https://img.shields.io/github/forks/streamxhub/streamx.svg?sanitize=true" class="shields">
-      </a>
-
       <a-dropdown>
         <a class="ant-dropdown-link username" @click="e => e.preventDefault()">
           {{ userName }} <a-icon type="caret-down" />

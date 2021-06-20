@@ -31,6 +31,8 @@ import $ from 'jquery'
 import './core/use'
 import './core/prototype'
 import './utils/filter' // global filter
+import SvgIcon from '@/components/SvgIcon'
+Vue.component('SIcon',SvgIcon)
 
 Vue.config.productionTip = false
 
