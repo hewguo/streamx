@@ -20,10 +20,8 @@
  */
 package com.streamxhub.streamx.common.util
 
-import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.yarn.api.records.YarnApplicationState._
 import org.apache.hadoop.yarn.api.records._
-import org.apache.hadoop.yarn.client.api.YarnClient
 import org.apache.hadoop.yarn.util.ConverterUtils
 
 import java.util
@@ -40,35 +38,30 @@ object YarnUtils {
    * @return
    */
   def getAppId(appName: String): List[ApplicationId] = {
-    val client = getYarnClient()
     val appStates = util.EnumSet.of(RUNNING, ACCEPTED, SUBMITTED)
     val appIds = try {
-      client.getApplications(appStates).filter(_.getName == appName).map(_.getApplicationId)
+      HadoopUtils.yarnClient.getApplications(appStates).filter(_.getName == appName).map(_.getApplicationId)
     } catch {
       case e: Exception => e.printStackTrace()
         ArrayBuffer.empty[ApplicationId]
-    } finally {
-      client.close()
     }
     appIds.toList
   }
 
   /**
    * 查询 state
+   *
    * @param appId
    * @return
    */
   def getState(appId: String): YarnApplicationState = {
-    val client = getYarnClient()
     val applicationId = ConverterUtils.toApplicationId(appId)
     val state = try {
-      val applicationReport = client.getApplicationReport(applicationId)
+      val applicationReport = HadoopUtils.yarnClient.getApplicationReport(applicationId)
       applicationReport.getYarnApplicationState
     } catch {
-      case e:Exception => e.printStackTrace()
+      case e: Exception => e.printStackTrace()
         null
-    } finally {
-      client.close()
     }
     state
   }
@@ -81,18 +74,12 @@ object YarnUtils {
    * @return
    */
   def isContains(appName: String): Boolean = {
-    val client = getYarnClient()
-    val contains = client.getApplications(util.EnumSet.of(RUNNING)).exists(_.getName == appName)
-    client.close()
-    contains
-  }
-
-  private[this] def getYarnClient(): YarnClient = {
-    val client = YarnClient.createYarnClient()
-    val conf = new Configuration()
-    client.init(conf)
-    client.start()
-    client
+    val runningApps = HadoopUtils.yarnClient.getApplications(util.EnumSet.of(RUNNING))
+    if (runningApps != null) {
+      runningApps.exists(_.getName == appName)
+    } else {
+      false
+    }
   }
 
 }

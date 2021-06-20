@@ -33,6 +33,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author benjobs
@@ -49,8 +51,19 @@ public class EnvInitializeRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+
+        System.getProperties().setProperty(
+                ConfigConst.KEY_STREAMX_HDFS_WORKSPACE(),
+                context.getEnvironment().getProperty(
+                        ConfigConst.KEY_STREAMX_HDFS_WORKSPACE(),
+                        ConfigConst.STREAMX_HDFS_WORKSPACE_DEFAULT()
+                )
+        );
+
         String profiles = context.getEnvironment().getActiveProfiles()[0];
+
         if (profiles.equals(PROD_ENV_NAME)) {
+
             String appUploads = ConfigConst.APP_UPLOADS();
             if (!HdfsUtils.exists(appUploads)) {
                 log.info("mkdir {} starting ...", appUploads);
@@ -100,13 +113,19 @@ public class EnvInitializeRunner implements ApplicationRunner {
             if (HdfsUtils.exists(appShims)) {
                 HdfsUtils.delete(appShims);
             }
-            HdfsUtils.mkdirs(appShims);
-            File shims = new File(WebUtil.getAppDir("shims"));
-            for (File file : Objects.requireNonNull(shims.listFiles())) {
-                String path = appShims.concat("/").concat(file.getName());
-                if (!HdfsUtils.exists(path)) {
-                    log.info("load shims:{} to {}", file.getName(), appShims);
-                    HdfsUtils.upload(file.getAbsolutePath(), appShims, false, true);
+            String regex = "^streamx-flink-shims_flink-(1.12|1.13)-(.*).jar$";
+            Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+            File[] shims = new File(WebUtil.getAppDir("lib")).listFiles(pathname -> pathname.getName().matches(regex));
+            for (File file : Objects.requireNonNull(shims)) {
+                Matcher matcher = pattern.matcher(file.getName());
+                if (matcher.matches()) {
+                    String version = matcher.group(1);
+                    String shimsPath = appShims.concat("/flink-").concat(version);
+                    if (!HdfsUtils.exists(shimsPath)) {
+                        HdfsUtils.mkdirs(shimsPath);
+                    }
+                    log.info("load shims:{} to {}", file.getName(), shimsPath);
+                    HdfsUtils.upload(file.getAbsolutePath(), shimsPath, false, true);
                 }
             }
         } else {
