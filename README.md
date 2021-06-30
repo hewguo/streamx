@@ -11,9 +11,11 @@
 <br/>
 
 <p align="center">
+  <a href="https://www.apache.org/licenses/LICENSE-2.0.html"><img src="https://img.shields.io/badge/license-Apache%202-4EB1BA.svg"></a>
+  <img src="https://tokei.rs/b1/github/streamxhub/streamx">
+  <img src="https://img.shields.io/github/v/release/streamxhub/streamx.svg">
   <img src="https://img.shields.io/github/stars/streamxhub/streamx">
   <img src="https://img.shields.io/github/forks/streamxhub/streamx">
-  <img src="https://img.shields.io/github/issues/streamxhub/streamx">
   <img src="https://img.shields.io/github/downloads/streamxhub/streamx/total">
   <img src="https://img.shields.io/github/languages/count/streamxhub/streamx">
 </p>
@@ -144,6 +146,35 @@ If you like this framework, and appreciate the work done for it to exist, you ca
 |:----------|:----------|
 | <img src="http://assets.streamxhub.com/1617938114478.jpg?12345" alt="Buy Me A Coffee" width="150"> | <img src="http://assets.streamxhub.com/1617938216431.jpg?12345" alt="Buy Me A Coffee" width="150"> |
 
+
+
+## 🏆 My sponsors (Coffee Suppliers)
+
+### 💜 Monthly Supplier
+
+Welcome individuals and enterprises to sponsor, your support will help us better develop the project
+
+### 🥇 Gold Supplier
+
+<p>
+  <a href="https://github.com/wolfboys" alt="benjobs"><img src="https://avatars.githubusercontent.com/u/13284744?v=4" height="50" width="50"></a>
+  <a href="https://github.com/Narcasserun" alt="Narcasserun"><img src="https://avatars.githubusercontent.com/u/39329477?v=4" height="50" width="50"></a>
+</p>
+
+### 🥈 Platinum Supplier
+
+<p>
+    <a href="https://github.com/lianxiaobao" alt="lianxiaobao"><img src="https://avatars.githubusercontent.com/u/36557317?v=4" height="50" width="50"></a>
+</p>
+
+### 🥈 Silver Supplier
+
+<p>
+    <a href="https://github.com/CrazyJugger" alt="leohantaoluo"><img src="https://avatars.githubusercontent.com/u/30514978?v=4" height="50" width="50"></a>
+    <a href="https://github.com/zhaizhirui" alt="zhaizhirui"><img src="https://avatars.githubusercontent.com/u/39609947?v=4" height="50" width="50"></a>
+</p>
+
+
 ### 🏅 Backers
 
 Thank you to all our backers!
@@ -160,7 +191,8 @@ Thank you to all our backers!
 </div>
 
 <div align="center">
-  <img src="http://assets.streamxhub.com/ben-wechat.png" alt="Join the Group" width="200"><br>
-  <span>join us(add information: StreamX)</span>
+    <img src="http://assets.streamxhub.com/joinus0627.png" alt="Join the Group" width="200"><br>
+    <span>join us</span>
 </div>
+
 
