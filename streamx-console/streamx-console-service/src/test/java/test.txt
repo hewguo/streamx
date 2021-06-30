@@ -63,8 +63,53 @@ GROUP BY DATE_FORMAT(ts, 'yyyy-MM-dd HH:00');
     <artifactId>flink-json</artifactId>
     <version>1.12.1</version>
   </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.6</version>
+        </dependency>
 
-
-  The number of requested virtual cores for application master 1 exceeds the maximum number of virtual cores 0 available in the Yarn Cluster.
-org.apache.flink.util.FlinkException: The "yarn.provided.lib.dirs" should only contain dirs accessible from all worker nodes, while the "file:/streamx/flink/flink-1.12.4/lib" is local.
-org.apache.flink.configuration.IllegalConfigurationException: The number of requested virtual cores per node 10 exceeds the maximum number of virtual cores 8 available in the Yarn Cluster. Please note that the number of virtual cores is set to the number of task slots by default unless configured in the Flink config with 'yarn.containers.vcores.'
+-- source
+CREATE TABLE user_log (
+  user_id VARCHAR,
+  item_id VARCHAR,
+  category_id VARCHAR,
+  behavior VARCHAR,
+  ts TIMESTAMP(3)
+) WITH (
+  'connector.type' = 'kafka',
+  'connector.version' = 'universal',
+  'connector.topic' = 'user_behavior',
+  'connector.startup-mode' = 'earliest-offset',
+  'connector.properties.0.key' = 'zookeeper.connect',
+  'connector.properties.0.value' = 'localhost:2181',
+  'connector.properties.1.key' = 'bootstrap.servers',
+  'connector.properties.1.value' = 'localhost:9092',
+  'update-mode' = 'append',
+  'format.type' = 'json',
+  'format.derive-schema' = 'true'
+);
+-- sink
+CREATE TABLE pvuv_sink (
+  dt VARCHAR,
+  pv BIGINT,
+  uv BIGINT --    PRIMARY KEY (dt)  NOT ENFORCED
+) WITH (
+  'connector.type' = 'jdbc',
+  'connector.url' = 'jdbc:postgresql://localhost:5432/test',
+  'connector.table' = 'pvuv_sink',
+  'connector.username' = 'test',
+  'connector.password' = 'test',
+  'connector.write.flush.max-rows' = '1',
+  'connector.driverclassname' = 'org.postgresql.Driver'
+);
+INSERT INTO
+  pvuv_sink
+SELECT
+  DATE_FORMAT(ts, 'yyyy-MM-dd HH:00') dt,
+  COUNT(*) AS pv,
+  COUNT(DISTINCT user_id) AS uv
+FROM
+  user_log
+GROUP BY
+  DATE_FORMAT(ts, 'yyyy-MM-dd HH:00');
