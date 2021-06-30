@@ -364,6 +364,12 @@
               @change="handleTableChange"
               class="detail-table">
               <template
+                slot="yarnAppId"
+                slot-scope="text, record"
+                class="pointer">
+                <span @click="handleView(record.yarnAppId)">{{ record.yarnAppId }}</span>
+              </template>
+              <template
                 slot="startTime"
                 slot-scope="text, record">
                 <a-icon
@@ -510,6 +516,7 @@
       <div
         id="startExp"
         class="startExp"
+        ref="startExp"
         style="height: 100%"/>
     </a-modal>
 
@@ -582,7 +589,7 @@
 </template>
 <script>
 import { mapActions, mapGetters } from 'vuex'
-import { get, backUps, startLog, removeBak, rollback } from '@api/application'
+import {get, backUps, startLog, removeBak, rollback, yarn} from '@api/application'
 import State from './State'
 import configOptions from './Option'
 import { get as getVer, list as listVer, remove as removeConf } from '@api/config'
@@ -627,6 +634,7 @@ export default {
       animated: false,
       tabBarGutter: 0,
       backup: null,
+      yarn: null,
       needBackup: false,
       rollbackVisible: false,
       formRollback: null,
@@ -834,7 +842,8 @@ export default {
           {
             title: 'Application Id',
             dataIndex: 'yarnAppId',
-            width: '40%'
+            width: '40%',
+            scopedSlots: { customRender: 'yarnAppId' }
           },
           {
             title: 'Start Status',
@@ -874,6 +883,7 @@ export default {
   },
 
   mounted() {
+    this.handleYarn()
     const appId = this.applicationId()
     if (appId) {
       this.CleanAppId()
@@ -953,6 +963,15 @@ export default {
         this.pagination.config = pagination
         this.pager.config.loading = false
       })
+    },
+    handleYarn() {
+      yarn({}).then((resp) => {
+        this.yarn = resp.data
+      })
+    },
+    handleView(appId) {
+        const url = this.yarn + '/proxy/' + appId + '/'
+        window.open(url)
     },
     handleSavePoint() {
       const params = {
@@ -1179,6 +1198,8 @@ export default {
           theme: 'log',
           value: this.execOption.content,
           language: 'log',
+          readOnly: true,
+          inherit: true,
           scrollBeyondLastLine: false,
           overviewRulerBorder: false, // 不要滚动条边框
           autoClosingBrackets: true,
@@ -1249,48 +1270,16 @@ export default {
     myTheme() {
       this.$refs.confEdit.theme()
       this.$refs.different.theme()
+      if(this.editor.exception !== null) {
+        this.editor.exception.updateOptions({
+          theme: this.ideTheme()
+        })
+      }
     }
   },
 }
 </script>
 
-<style scoped lang="less">
-.desc-item {
-  padding-top: 20px;
-}
-
-.syntax-true {
-  border: 1px solid @border-color-base
-}
-
-.ant-tabs-nav .ant-tabs-tab-active {
-  font-weight: unset !important;
-  background-color: @background-color-base;
-}
-
-.ant-tabs-nav .ant-tabs-tab {
-  margin: 0 32px 0 0;
-  padding: 8px 15px;
-}
-
-.app-bar {
-  background-color: @background-color-base;
-  height: 100%;
-  font-weight: normal;
-  margin: 0 32px 0 0;
-  padding: 8px 12px;
-}
-
-.ant-descriptions-bordered.ant-descriptions-middle .ant-descriptions-item-content {
-  padding: 10px 24px;
-}
-
-.detail-table {
-  margin-top: unset !important;
-}
-
-.detail-table .ant-table-thead > tr > td, .detail-table .ant-table-tbody > tr > td {
-  padding: 9px 9px !important;
-}
-
+<style lang="less">
+@import "Detail";
 </style>

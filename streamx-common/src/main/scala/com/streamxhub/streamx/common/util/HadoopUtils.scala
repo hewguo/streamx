@@ -21,12 +21,11 @@
 
 package com.streamxhub.streamx.common.util
 
-import com.streamxhub.streamx.common.conf.ConfigConst
-import com.streamxhub.streamx.common.conf.ConfigConst.{KEY_JAVA_SECURITY_KRB5_CONF, KEY_SECURITY_KERBEROS_KRB5_CONF}
+import com.streamxhub.streamx.common.conf.ConfigConst._
 import org.apache.commons.collections.CollectionUtils
 import org.apache.commons.lang.StringUtils
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{CommonConfigurationKeys, FileSystem, LocalFileSystem, Path}
+import org.apache.hadoop.fs._
 import org.apache.hadoop.hdfs.DistributedFileSystem
 import org.apache.hadoop.net.NetUtils
 import org.apache.hadoop.security.UserGroupInformation
@@ -44,7 +43,8 @@ import java.io.{File, IOException}
 import java.net.InetAddress
 import java.util
 import java.util.concurrent.ConcurrentHashMap
-import java.util.{HashMap => JavaHashMap}
+import java.util.{Date, Timer, TimerTask, HashMap => JavaHashMap}
+import javax.security.auth.kerberos.KerberosTicket
 import scala.collection.JavaConversions._
 import scala.util.control.Breaks._
 import scala.util.{Failure, Success, Try}
@@ -54,46 +54,52 @@ import scala.util.{Failure, Success, Try}
  */
 object HadoopUtils extends Logger {
 
-  private[this] val HADOOP_HOME: String = "HADOOP_HOME"
-  private[this] val HADOOP_CONF_DIR: String = "HADOOP_CONF_DIR"
-  private[this] val CONF_SUFFIX: String = "/etc/hadoop"
+  private[this] lazy val HADOOP_HOME: String = "HADOOP_HOME"
+  private[this] lazy val HADOOP_CONF_DIR: String = "HADOOP_CONF_DIR"
+  private[this] lazy val CONF_SUFFIX: String = "/etc/hadoop"
 
-  private[this] var innerYarnClient: YarnClient = _
+  private[this] var reusableYarnClient: YarnClient = _
+
+  private[this] var reusableConf: Configuration = _
+
+  private[util] var hdfs: FileSystem = getFileSystem(hadoopConf)
+
   private[this] var rmHttpURL: String = _
 
-  private[this] val configurationCache: util.Map[String, Configuration] = new ConcurrentHashMap[String, Configuration]
+  private[this] lazy val configurationCache: util.Map[String, Configuration] = new ConcurrentHashMap[String, Configuration]()
 
-  lazy val kerberosConf: Map[String, String] = {
-    SystemPropertyUtils.get("app.home", null) match {
-      case null =>
-        val inputStream = getClass.getResourceAsStream("/kerberos.yml")
-        if (inputStream == null) null else {
-          PropertiesUtils.fromYamlFile(inputStream)
-        }
-      case f =>
-        val file = new File(s"$f/conf/kerberos.yml")
-        if (file.exists() && file.isFile) {
-          PropertiesUtils.fromYamlFile(file.getAbsolutePath)
-        } else null
-    }
+  lazy val kerberosConf: Map[String, String] = SystemPropertyUtils.get("app.home", null) match {
+    case null =>
+      getClass.getResourceAsStream("/kerberos.yml") match {
+        case x if x != null => PropertiesUtils.fromYamlFile(x)
+        case _ => null
+      }
+    case f =>
+      val file = new File(s"$f/conf/kerberos.yml")
+      if (file.exists() && file.isFile) {
+        PropertiesUtils.fromYamlFile(file.getAbsolutePath)
+      } else null
   }
-
-  private[this] val kerberosEnable: Boolean = if (kerberosConf == null) false else {
-    val enableString = kerberosConf.getOrElse(ConfigConst.KEY_SECURITY_KERBEROS_ENABLE, "false")
-    Try(enableString.trim.toBoolean).getOrElse(false)
-  }
-
 
   private[this] lazy val hadoopConfDir: String = Try(FileUtils.getPathFromEnv(HADOOP_CONF_DIR)) match {
     case Failure(_) => FileUtils.resolvePath(FileUtils.getPathFromEnv(HADOOP_HOME), CONF_SUFFIX)
     case Success(value) => value
   }
 
+  private[this] def getFileSystem(hadoopConf: Configuration): FileSystem = {
+    Try(FileSystem.get(hadoopConf)) match {
+      case Success(fs) => fs
+      case Failure(e) =>
+        throw new IllegalArgumentException(s"[StreamX] access hdfs error.$e")
+    }
+  }
+
+
   def getConfigurationFromHadoopConfDir(confDir: String = hadoopConfDir): Configuration = {
     if (!configurationCache.containsKey(confDir)) {
       FileUtils.exists(confDir)
       val hadoopConfDir = new File(confDir)
-      val confName = List("core-site.xml", "hdfs-site.xml", "yarn-site.xml")
+      val confName = List("core-site.xml", "hdfs-site.xml", "yarn-site.xml", "mapred-site.xml")
       val files = hadoopConfDir.listFiles().filter(x => x.isFile && confName.contains(x.getName)).toList
       val conf = new Configuration()
       if (CollectionUtils.isNotEmpty(files)) {
@@ -112,68 +118,120 @@ object HadoopUtils extends Logger {
    * 推荐第二种方法,不用copy配置文件.<br>
    * </pre>
    */
-  lazy val conf: Configuration = {
-    val conf = getConfigurationFromHadoopConfDir(hadoopConfDir)
-    //add hadoopConfDir to classpath...you know why???
-    ClassLoaderUtils.loadResource(hadoopConfDir)
+  def hadoopConf: Configuration = {
+    def initHadoopConf(): Configuration = {
+      val conf = getConfigurationFromHadoopConfDir(hadoopConfDir)
+      //add hadoopConfDir to classpath...you know why???
+      ClassLoaderUtils.loadResource(hadoopConfDir)
 
-    if (StringUtils.isBlank(conf.get("hadoop.tmp.dir"))) {
-      conf.set("hadoop.tmp.dir", "/tmp")
-    }
-    if (StringUtils.isBlank(conf.get("hbase.fs.tmp.dir"))) {
-      conf.set("hbase.fs.tmp.dir", "/tmp")
-    }
-    // disable timeline service as we only query yarn app here.
-    // Otherwise we may hit this kind of ERROR:
-    // java.lang.ClassNotFoundException: com.sun.jersey.api.client.config.ClientConfig
-    conf.set("yarn.timeline-service.enabled", "false")
-    conf.set("fs.hdfs.impl", classOf[DistributedFileSystem].getName)
-    conf.set("fs.file.impl", classOf[LocalFileSystem].getName)
-    conf.set("fs.hdfs.impl.disable.cache", "true")
-    kerberosLogin(conf)
-    conf
-  }
-
-  private[this] def kerberosLogin(conf: Configuration): Unit = if (kerberosEnable) {
-    logInfo("kerberos login starting....")
-    val principal = kerberosConf.getOrElse(ConfigConst.KEY_SECURITY_KERBEROS_PRINCIPAL, "").trim
-    val keytab = kerberosConf.getOrElse(ConfigConst.KEY_SECURITY_KERBEROS_KEYTAB, "").trim
-    require(
-      principal.nonEmpty && keytab.nonEmpty,
-      s"${ConfigConst.KEY_SECURITY_KERBEROS_PRINCIPAL} and ${ConfigConst.KEY_SECURITY_KERBEROS_KEYTAB} must be not empty"
-    )
-
-    val krb5 = kerberosConf.getOrElse(
-      KEY_SECURITY_KERBEROS_KRB5_CONF,
-      kerberosConf.getOrElse(KEY_JAVA_SECURITY_KRB5_CONF, "")
-    ).trim
-
-    if (krb5.nonEmpty) {
-      System.setProperty("java.security.krb5.conf", krb5)
-      System.setProperty("java.security.krb5.conf.path", krb5)
+      if (StringUtils.isBlank(conf.get("hadoop.tmp.dir"))) {
+        conf.set("hadoop.tmp.dir", "/tmp")
+      }
+      if (StringUtils.isBlank(conf.get("hbase.fs.tmp.dir"))) {
+        conf.set("hbase.fs.tmp.dir", "/tmp")
+      }
+      // disable timeline service as we only query yarn app here.
+      // Otherwise we may hit this kind of ERROR:
+      // java.lang.ClassNotFoundException: com.sun.jersey.api.client.config.ClientConfig
+      conf.set("yarn.timeline-service.enabled", "false")
+      conf.set("fs.hdfs.impl", classOf[DistributedFileSystem].getName)
+      conf.set("fs.file.impl", classOf[LocalFileSystem].getName)
+      conf.set("fs.hdfs.impl.disable.cache", "true")
+      conf
     }
 
-    conf.set(ConfigConst.KEY_HADOOP_SECURITY_AUTHENTICATION, ConfigConst.KEY_KERBEROS)
-    try {
-      UserGroupInformation.setConfiguration(conf)
-      UserGroupInformation.loginUserFromKeytab(principal, keytab)
-      logInfo("kerberos authentication successful")
-    } catch {
-      case e: IOException =>
-        logInfo(s"kerberos login failed,${e.getLocalizedMessage}")
-        throw e
+    def kerberosLogin(conf: Configuration): Unit = {
+      logInfo("kerberos login starting....")
+      val principal = kerberosConf.getOrElse(KEY_SECURITY_KERBEROS_PRINCIPAL, "").trim
+      val keytab = kerberosConf.getOrElse(KEY_SECURITY_KERBEROS_KEYTAB, "").trim
+      require(
+        principal.nonEmpty && keytab.nonEmpty,
+        s"$KEY_SECURITY_KERBEROS_PRINCIPAL and $KEY_SECURITY_KERBEROS_KEYTAB must not be empty"
+      )
+
+      val krb5 = kerberosConf.getOrElse(
+        KEY_SECURITY_KERBEROS_KRB5_CONF,
+        kerberosConf.getOrElse(KEY_JAVA_SECURITY_KRB5_CONF, "")
+      ).trim
+
+      if (krb5.nonEmpty) {
+        System.setProperty("java.security.krb5.conf", krb5)
+        System.setProperty("java.security.krb5.conf.path", krb5)
+      }
+      System.setProperty("sun.security.spnego.debug", "true")
+      System.setProperty("sun.security.krb5.debug", "true")
+      conf.set(KEY_HADOOP_SECURITY_AUTHENTICATION, KEY_KERBEROS)
+      try {
+        UserGroupInformation.setConfiguration(conf)
+        UserGroupInformation.loginUserFromKeytab(principal, keytab)
+        logInfo("kerberos authentication successful")
+      } catch {
+        case e: IOException =>
+          logInfo(s"kerberos login failed,${ExceptionUtils.stringifyException(e)}")
+          throw e
+      }
     }
+
+    def getDuration: (Long, Long) = {
+      val user = UserGroupInformation.getLoginUser
+      val method = classOf[UserGroupInformation].getDeclaredMethod("getTGT")
+      method.setAccessible(true)
+      val tgt = method.invoke(user).asInstanceOf[KerberosTicket]
+      Option(tgt) match {
+        case Some(value) =>
+          val start = value.getStartTime.getTime
+          val end = value.getEndTime.getTime
+          val duration = ((end - start) * 0.80f).toLong
+          logInfo(s"kerberosTicket start:${DateUtils.format(value.getStartTime)},end: ${DateUtils.format(value.getEndTime)},duration:$duration")
+          (duration, start + duration)
+        case _ => (0, 0)
+      }
+    }
+
+    def reLoginKerberos(): Unit = {
+      val timer = new Timer()
+      val duration = getDuration
+      val delay = 1000 * 5 //you know way?
+      timer.schedule(new TimerTask {
+        override def run(): Unit = {
+          UserGroupInformation.getLoginUser.checkTGTAndReloginFromKeytab()
+          val nextDuration = getDuration
+          val nextTrigger = System.currentTimeMillis() + nextDuration._1 + delay
+          logInfo(
+            s"""
+               |------------------------------------------------------------------
+               |      Check Kerberos Tgt And reLogin From Keytab Finish.
+               |            current   trigger: ${DateUtils.now(DateUtils.fullFormat)}
+               |            next task trigger: ${DateUtils.format(new Date(nextTrigger))}
+               |            next refresh time: ${DateUtils.format(new Date(nextDuration._2))}
+               |------------------------------------------------------------------
+               |""".stripMargin)
+        }
+      }, duration._1, duration._1 + delay)
+    }
+
+    if (reusableConf == null) {
+      reusableConf = initHadoopConf()
+      if (kerberosConf != null) {
+        val enableString = kerberosConf.getOrElse(KEY_SECURITY_KERBEROS_ENABLE, "false")
+        val kerberosEnable = Try(enableString.trim.toBoolean).getOrElse(false)
+        if (kerberosEnable) {
+          kerberosLogin(reusableConf)
+          reLoginKerberos()
+        }
+      }
+    }
+    reusableConf
   }
 
   def yarnClient: YarnClient = {
-    if (innerYarnClient == null || !innerYarnClient.isInState(STATE.STARTED)) {
-      innerYarnClient = YarnClient.createYarnClient
-      val yarnConf = new YarnConfiguration(conf)
-      kerberosLogin(yarnConf)
-      innerYarnClient.init(yarnConf)
-      innerYarnClient.start()
+    if (reusableYarnClient == null || !reusableYarnClient.isInState(STATE.STARTED)) {
+      reusableYarnClient = YarnClient.createYarnClient
+      val yarnConf = new YarnConfiguration(hadoopConf)
+      reusableYarnClient.init(yarnConf)
+      reusableYarnClient.start()
     }
-    innerYarnClient
+    reusableYarnClient
   }
 
   /**
@@ -191,6 +249,8 @@ object HadoopUtils extends Logger {
       synchronized {
         if (rmHttpURL == null || getLatest) {
 
+          val conf = hadoopConf
+
           val useHttps = YarnConfiguration.useHttps(conf)
           val (addressPrefix, defaultPort, protocol) = useHttps match {
             case x if x => (YarnConfiguration.RM_WEBAPP_HTTPS_ADDRESS, "8090", "https://")
@@ -198,40 +258,42 @@ object HadoopUtils extends Logger {
           }
 
           val name = if (!HAUtil.isHAEnabled(conf)) addressPrefix else {
-            val yarnConf = new YarnConfiguration(conf)
-            val activeRMId = kerberosEnable match {
-              case b if !b => RMHAUtils.findActiveRMHAId(yarnConf)
-              case _ =>
-                //If you don't know why, don't modify it
-                val rmIds = conf.getStringCollection("yarn.resourcemanager.ha.rm-ids")
-                // url ==> rmId
-                val idUrlMap = new JavaHashMap[String, String]
-                rmIds.foreach(id => {
-                  val address = conf.get(HAUtil.addSuffix(addressPrefix, id)) match {
-                    case null =>
-                      val hostname = conf.get(HAUtil.addSuffix("yarn.resourcemanager.hostname", id))
-                      s"$hostname:$defaultPort"
-                    case x => x
-                  }
-                  idUrlMap.put(s"$protocol$address", id)
-                })
-
-                var rmId: String = null
-
-                val rpcTimeoutForChecks = yarnConf.getInt(
-                  CommonConfigurationKeys.HA_FC_CLI_CHECK_TIMEOUT_KEY,
-                  CommonConfigurationKeys.HA_FC_CLI_CHECK_TIMEOUT_DEFAULT
-                )
-
-                breakable(idUrlMap.foreach(x => {
-                  //test yarn url
-                  val activeUrl = httpTestYarnRMUrl(x._1, rpcTimeoutForChecks)
-                  if (activeUrl != null) {
-                    rmId = idUrlMap(activeUrl)
-                    break
-                  }
-                }))
-                rmId
+            val activeRMId = {
+              val yarnConf = new YarnConfiguration(conf)
+              Option(RMHAUtils.findActiveRMHAId(yarnConf)) match {
+                case Some(x) =>
+                  logInfo("findActiveRMHAId successful")
+                  x
+                case None =>
+                  //If you don't know why, don't modify it
+                  logWarn(s"findActiveRMHAId is null,config yarn.acl.enable:${yarnConf.get("yarn.acl.enable")},now http try it.")
+                  // url ==> rmId
+                  val idUrlMap = new JavaHashMap[String, String]
+                  val rmIds = HAUtil.getRMHAIds(conf)
+                  rmIds.foreach(id => {
+                    val address = conf.get(HAUtil.addSuffix(addressPrefix, id)) match {
+                      case null =>
+                        val hostname = conf.get(HAUtil.addSuffix("yarn.resourcemanager.hostname", id))
+                        s"$hostname:$defaultPort"
+                      case x => x
+                    }
+                    idUrlMap.put(s"$protocol$address", id)
+                  })
+                  var rmId: String = null
+                  val rpcTimeoutForChecks = yarnConf.getInt(
+                    CommonConfigurationKeys.HA_FC_CLI_CHECK_TIMEOUT_KEY,
+                    CommonConfigurationKeys.HA_FC_CLI_CHECK_TIMEOUT_DEFAULT
+                  )
+                  breakable(idUrlMap.foreach(x => {
+                    //test yarn url
+                    val activeUrl = httpTestYarnRMUrl(x._1, rpcTimeoutForChecks)
+                    if (activeUrl != null) {
+                      rmId = idUrlMap(activeUrl)
+                      break
+                    }
+                  }))
+                  rmId
+              }
             }
             require(activeRMId != null, "[StreamX] can not found yarn active node")
             logInfo(s"current activeRMHAId: $activeRMId")
@@ -258,6 +320,7 @@ object HadoopUtils extends Logger {
             .append(address.getPort)
             .toString()
 
+          logInfo(s"yarn resourceManager webapp url:$rmHttpURL")
         }
       }
     }
@@ -297,5 +360,4 @@ object HadoopUtils extends Logger {
     fs.copyToLocalFile(sourcePath, destPath)
     new File(destPath.toString).getAbsolutePath
   }
-
 }

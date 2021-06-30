@@ -9,7 +9,7 @@
         <relativePath/>
     </parent>
     <artifactId>streamx-console-service</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.1.0</version>
     <name>StreamX : Console Service</name>
 
     <!-- 定义统一版本号-->
@@ -17,7 +17,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <mybatis-plus.version>3.1.0</mybatis-plus.version>
-        <hadoop.version>2.8.3</hadoop.version>
+        <hadoop.version>2.10.1</hadoop.version>
         <hbase.version>2.1.10</hbase.version>
         <flink112.version>1.12.0</flink112.version>
         <flink113.version>1.13.0</flink113.version>
@@ -119,11 +119,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
         </dependency>
 
         <dependency>
@@ -417,13 +412,13 @@
         <dependency>
             <groupId>com.streamxhub.streamx</groupId>
             <artifactId>streamx-flink-shims_flink-1.12</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
+            <version>1.1.0</version>
         </dependency>
 
         <dependency>
             <groupId>com.streamxhub.streamx</groupId>
             <artifactId>streamx-flink-shims_flink-1.13</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
+            <version>1.1.0</version>
         </dependency>
 
         <dependency>

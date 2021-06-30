@@ -31,10 +31,15 @@ import org.apache.flink.client.deployment.DefaultClusterClientServiceLoader
 import org.apache.flink.client.deployment.application.ApplicationConfiguration
 import org.apache.flink.client.program.PackagedProgramUtils
 import org.apache.flink.configuration._
+import org.apache.flink.runtime.security.{SecurityConfiguration, SecurityUtils}
+import org.apache.flink.runtime.util.HadoopUtils
 import org.apache.flink.util.Preconditions.checkNotNull
 import org.apache.flink.yarn.configuration.{YarnConfigOptions, YarnDeploymentTarget}
+import org.apache.hadoop.security.UserGroupInformation
 import org.apache.hadoop.yarn.api.records.ApplicationId
 
+import java.lang.{Boolean => JavaBool}
+import java.util.concurrent.Callable
 import java.util.{Collections, List => JavaList}
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -58,34 +63,39 @@ object ApplicationSubmit extends YarnSubmitTrait {
 
     val flinkConfig = getEffectiveConfiguration(submitRequest, activeCommandLine, commandLine, Collections.singletonList(uri.toString))
 
-    val clusterClientServiceLoader = new DefaultClusterClientServiceLoader
-    val clientFactory = clusterClientServiceLoader.getClusterClientFactory[ApplicationId](flinkConfig)
-    val clusterDescriptor = clientFactory.createClusterDescriptor(flinkConfig)
-    try {
-      val clusterSpecification = clientFactory.getClusterSpecification(flinkConfig)
-      logInfo(
-        s"""
-           |--------------------------<<specification>>---------------------------
-           |$clusterSpecification
-           |----------------------------------------------------------------------
-           |""".stripMargin)
+    SecurityUtils.install(new SecurityConfiguration(flinkConfig))
+    SecurityUtils.getInstalledContext.runSecured(new Callable[SubmitResponse] {
+      override def call(): SubmitResponse = {
+        val clusterClientServiceLoader = new DefaultClusterClientServiceLoader
+        val clientFactory = clusterClientServiceLoader.getClusterClientFactory[ApplicationId](flinkConfig)
+        val clusterDescriptor = clientFactory.createClusterDescriptor(flinkConfig)
+        try {
+          val clusterSpecification = clientFactory.getClusterSpecification(flinkConfig)
+          logInfo(
+            s"""
+               |------------------------<<specification>>-------------------------
+               |$clusterSpecification
+               |------------------------------------------------------------------
+               |""".stripMargin)
 
-      val applicationConfiguration = ApplicationConfiguration.fromConfiguration(flinkConfig)
-      var applicationId: ApplicationId = null
-      val clusterClient = clusterDescriptor.deployApplicationCluster(clusterSpecification, applicationConfiguration).getClusterClient
-      applicationId = clusterClient.getClusterId
+          val applicationConfiguration = ApplicationConfiguration.fromConfiguration(flinkConfig)
+          var applicationId: ApplicationId = null
+          val clusterClient = clusterDescriptor.deployApplicationCluster(clusterSpecification, applicationConfiguration).getClusterClient
+          applicationId = clusterClient.getClusterId
 
-      logInfo(
-        s"""
-           ||--------------------------<<applicationId>>--------------------------|
-           || Flink Job Started: applicationId: $applicationId  |
-           ||_____________________________________________________________________|
-           |""".stripMargin)
+          logInfo(
+            s"""
+               ||-------------------------<<applicationId>>------------------------|
+               ||Flink Job Started: applicationId: $applicationId|
+               ||__________________________________________________________________|
+               |""".stripMargin)
 
-      SubmitResponse(applicationId, flinkConfig)
-    } finally if (clusterDescriptor != null) {
-      clusterDescriptor.close()
-    }
+          SubmitResponse(applicationId, flinkConfig)
+        } finally if (clusterDescriptor != null) {
+          clusterDescriptor.close()
+        }
+      }
+    })
   }
 
   private def getEffectiveConfiguration[T](
@@ -141,6 +151,17 @@ object ApplicationSubmit extends YarnSubmitTrait {
       }
       providedLibs -> programArgs
     }
+
+    val currentUser = UserGroupInformation.getCurrentUser
+    logDebug(s"UserGroupInformation currentUser: $currentUser")
+    if (HadoopUtils.isKerberosSecurityEnabled(currentUser)) {
+      logDebug(s"kerberos Security is Enabled...")
+      val useTicketCache = getOptionFromDefaultFlinkConfig[JavaBool](submitRequest.flinkHome, SecurityOptions.KERBEROS_LOGIN_USETICKETCACHE)
+      if (!HadoopUtils.areKerberosCredentialsValid(currentUser, useTicketCache)) {
+        throw new RuntimeException(s"Hadoop security with Kerberos is enabled but the login user ${currentUser} does not have Kerberos credentials or delegation tokens!")
+      }
+    }
+
     //yarn.provided.lib.dirs
     effectiveConfiguration.set(YarnConfigOptions.PROVIDED_LIB_DIRS, providedLibs.asJava)
     //flinkDistJar
@@ -161,9 +182,9 @@ object ApplicationSubmit extends YarnSubmitTrait {
 
     logInfo(
       s"""
-         |----------------------------------------------------------------------
+         |------------------------------------------------------------------
          |Effective executor configuration: $effectiveConfiguration
-         |----------------------------------------------------------------------
+         |------------------------------------------------------------------
          |""".stripMargin)
 
     effectiveConfiguration
