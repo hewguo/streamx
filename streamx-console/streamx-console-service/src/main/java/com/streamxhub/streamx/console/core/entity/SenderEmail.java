@@ -27,8 +27,13 @@ public class SenderEmail {
 
     private String smtpHost;
     private Integer smtpPort;
+<<<<<<< HEAD
     private String from;
     private String userName;
+=======
+    private String email;
+    private String from;
+>>>>>>> 6c7e86fa... [bugfix] sent email "from" parameter bug fixed.
     private String password;
     private boolean ssl;
 

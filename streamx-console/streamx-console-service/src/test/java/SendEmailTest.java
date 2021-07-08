@@ -150,7 +150,11 @@ public class SendEmailTest {
         HtmlEmail htmlEmail = new HtmlEmail();
         htmlEmail.setCharset("UTF-8");
         htmlEmail.setHostName(this.senderEmail.getSmtpHost());
+<<<<<<< HEAD
         htmlEmail.setAuthentication(this.senderEmail.getUserName(), this.senderEmail.getPassword());
+=======
+        htmlEmail.setAuthentication(this.senderEmail.getEmail(), this.senderEmail.getPassword());
+>>>>>>> 6c7e86fa... [bugfix] sent email "from" parameter bug fixed.
         htmlEmail.setFrom(this.senderEmail.getFrom());
 
         if (this.senderEmail.isSsl()) {
