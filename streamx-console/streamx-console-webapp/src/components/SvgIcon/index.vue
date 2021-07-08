@@ -41,16 +41,8 @@
     <resetpass v-if="name==='resetpass'"></resetpass>
     <sun v-if="name==='sun'"></sun>
     <moon v-if="name==='moon'"></moon>
-<<<<<<< HEAD
-<<<<<<< HEAD
     <user v-if="name==='user'"></user>
-=======
-    <ifrom v-if="name==='from'"></ifrom>
->>>>>>> 6c7e86fa... [bugfix] sent email "from" parameter bug fixed.
-=======
-    <emailfrom v-if="name==='emailfrom'"></emailfrom>
->>>>>>> cbc6e2de... [bugfix] mainClass bug fixed.
-  </span>
+    <user v-if="name==='user'"></user>
 </template>
 
 <script>
@@ -96,15 +88,7 @@ import {
   resetpass,
   sun,
   moon,
-<<<<<<< HEAD
-<<<<<<< HEAD
   user
-=======
-  ifrom
->>>>>>> 6c7e86fa... [bugfix] sent email "from" parameter bug fixed.
-=======
-  emailfrom
->>>>>>> cbc6e2de... [bugfix] mainClass bug fixed.
 } from '@/core/icons'
 
 export default {
@@ -151,15 +135,7 @@ export default {
     resetpass,
     sun,
     moon,
-<<<<<<< HEAD
-<<<<<<< HEAD
     user
-=======
-    ifrom
->>>>>>> 6c7e86fa... [bugfix] sent email "from" parameter bug fixed.
-=======
-    emailfrom
->>>>>>> cbc6e2de... [bugfix] mainClass bug fixed.
   },
   props: {
     name: {

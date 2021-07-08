@@ -47,15 +47,7 @@ import github from '@/assets/icons/github.svg?inline'
 import resetpass from '@/assets/icons/resetpass.svg?inline'
 import sun from '@/assets/icons/sun.svg?inline'
 import moon from '@/assets/icons/moon.svg?inline'
-<<<<<<< HEAD
-<<<<<<< HEAD
 import user from '@/assets/icons/user.svg?inline'
-=======
-import ifrom from '@/assets/icons/from.svg?inline'
->>>>>>> 6c7e86fa... [bugfix] sent email "from" parameter bug fixed.
-=======
-import emailfrom from '@/assets/icons/emailfrom.svg?inline'
->>>>>>> cbc6e2de... [bugfix] mainClass bug fixed.
 
 export {
   analyse,
@@ -99,13 +91,5 @@ export {
   resetpass,
   sun,
   moon,
-<<<<<<< HEAD
-<<<<<<< HEAD
   user
-=======
-  ifrom
->>>>>>> 6c7e86fa... [bugfix] sent email "from" parameter bug fixed.
-=======
-  emailfrom
->>>>>>> cbc6e2de... [bugfix] mainClass bug fixed.
 }
