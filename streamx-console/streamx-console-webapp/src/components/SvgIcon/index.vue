@@ -42,7 +42,7 @@
     <sun v-if="name==='sun'"></sun>
     <moon v-if="name==='moon'"></moon>
     <user v-if="name==='user'"></user>
-    <user v-if="name==='user'"></user>
+  </span>
 </template>
 
 <script>
