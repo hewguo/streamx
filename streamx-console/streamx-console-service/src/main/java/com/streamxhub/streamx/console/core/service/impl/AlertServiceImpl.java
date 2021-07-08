@@ -134,7 +134,11 @@ public class AlertServiceImpl implements AlertService {
             HtmlEmail htmlEmail = new HtmlEmail();
             htmlEmail.setCharset("UTF-8");
             htmlEmail.setHostName(this.senderEmail.getSmtpHost());
+<<<<<<< HEAD
             htmlEmail.setAuthentication(this.senderEmail.getUserName(), this.senderEmail.getPassword());
+=======
+            htmlEmail.setAuthentication(this.senderEmail.getEmail(), this.senderEmail.getPassword());
+>>>>>>> 6c7e86fa... [bugfix] sent email "from" parameter bug fixed.
             htmlEmail.setFrom(this.senderEmail.getFrom());
             if (this.senderEmail.isSsl()) {
                 htmlEmail.setSSLOnConnect(true);
@@ -169,8 +173,13 @@ public class AlertServiceImpl implements AlertService {
         template.setEndTime(DateUtils.format(application.getEndTime() == null ? new Date() : application.getEndTime(), DateUtils.fullFormat(), TimeZone.getDefault()));
         template.setDuration(DateUtils.toRichTimeDuration(duration));
         boolean needRestart = application.isNeedRestartOnFailed() && application.getRestartCount() > 0;
+<<<<<<< HEAD
         template.setRestart(needRestart);
         if (needRestart) {
+=======
+        if (needRestart) {
+            template.setRestart(true);
+>>>>>>> 6c7e86fa... [bugfix] sent email "from" parameter bug fixed.
             template.setRestartIndex(application.getRestartCount());
             template.setTotalRestart(application.getRestartSize());
         }

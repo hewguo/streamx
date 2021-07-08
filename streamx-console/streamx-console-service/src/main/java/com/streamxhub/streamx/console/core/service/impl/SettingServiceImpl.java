@@ -134,16 +134,26 @@ public class SettingServiceImpl extends ServiceImpl<SettingMapper, Setting>
         try {
             String host = settings.get(SettingService.KEY_ALERT_EMAIL_HOST).getValue();
             String port = settings.get(SettingService.KEY_ALERT_EMAIL_PORT).getValue();
+<<<<<<< HEAD
             String from = settings.get(SettingService.KEY_ALERT_EMAIL_FROM).getValue();
             String userName = settings.get(SettingService.KEY_ALERT_EMAIL_USERNAME).getValue();
+=======
+            String sender = settings.get(SettingService.KEY_ALERT_EMAIL_SENDER).getValue();
+            String from = settings.get(SettingService.KEY_ALERT_EMAIL_FROM).getValue();
+>>>>>>> 6c7e86fa... [bugfix] sent email "from" parameter bug fixed.
             String password = settings.get(SettingService.KEY_ALERT_EMAIL_PASSWORD).getValue();
             String ssl = settings.get(SettingService.KEY_ALERT_EMAIL_SSL).getValue();
 
             SenderEmail senderEmail = new SenderEmail();
             senderEmail.setSmtpHost(host);
             senderEmail.setSmtpPort(Integer.parseInt(port));
+<<<<<<< HEAD
             senderEmail.setFrom(from);
             senderEmail.setUserName(userName);
+=======
+            senderEmail.setEmail(sender);
+            senderEmail.setFrom(from);
+>>>>>>> 6c7e86fa... [bugfix] sent email "from" parameter bug fixed.
             senderEmail.setPassword(password);
             senderEmail.setSsl(Boolean.parseBoolean(ssl));
             return senderEmail;

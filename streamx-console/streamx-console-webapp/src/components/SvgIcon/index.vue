@@ -41,7 +41,11 @@
     <resetpass v-if="name==='resetpass'"></resetpass>
     <sun v-if="name==='sun'"></sun>
     <moon v-if="name==='moon'"></moon>
+<<<<<<< HEAD
     <user v-if="name==='user'"></user>
+=======
+    <ifrom v-if="name==='from'"></ifrom>
+>>>>>>> 6c7e86fa... [bugfix] sent email "from" parameter bug fixed.
   </span>
 </template>
 
@@ -88,7 +92,11 @@ import {
   resetpass,
   sun,
   moon,
+<<<<<<< HEAD
   user
+=======
+  ifrom
+>>>>>>> 6c7e86fa... [bugfix] sent email "from" parameter bug fixed.
 } from '@/core/icons'
 
 export default {
@@ -135,7 +143,11 @@ export default {
     resetpass,
     sun,
     moon,
+<<<<<<< HEAD
     user
+=======
+    ifrom
+>>>>>>> 6c7e86fa... [bugfix] sent email "from" parameter bug fixed.
   },
   props: {
     name: {
