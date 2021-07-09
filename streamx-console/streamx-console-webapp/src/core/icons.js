@@ -48,6 +48,7 @@ import resetpass from '@/assets/icons/resetpass.svg?inline'
 import sun from '@/assets/icons/sun.svg?inline'
 import moon from '@/assets/icons/moon.svg?inline'
 import npit from '@/assets/icons/npit.svg?inline'
+import user from '@/assets/icons/user.svg?inline'
 
 export {
   analyse,
@@ -91,5 +92,6 @@ export {
   resetpass,
   sun,
   moon,
-  npit
+  npit,
+  user
 }

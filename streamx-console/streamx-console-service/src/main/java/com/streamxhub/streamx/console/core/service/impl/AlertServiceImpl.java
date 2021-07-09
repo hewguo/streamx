@@ -110,6 +110,8 @@ public class AlertServiceImpl implements AlertService {
         if (this.senderEmail != null && Utils.notEmpty(application.getAlertEmail())) {
             MailTemplate mail = getMailTemplate(application);
             mail.setType(2);
+            mail.setCpFailureRateInterval(DateUtils.toRichTimeDuration(application.getCpFailureRateInterval()));
+            mail.setCpMaxFailureInterval(application.getCpMaxFailureInterval());
             mail.setTitle(String.format("Notify: %s checkpoint FAILED", application.getJobName()));
 
             String subject = String.format("StreamX Alert: %s, checkPoint is Failed", application.getJobName());
@@ -132,8 +134,8 @@ public class AlertServiceImpl implements AlertService {
             HtmlEmail htmlEmail = new HtmlEmail();
             htmlEmail.setCharset("UTF-8");
             htmlEmail.setHostName(this.senderEmail.getSmtpHost());
-            htmlEmail.setAuthentication(this.senderEmail.getEmail(), this.senderEmail.getPassword());
-            htmlEmail.setFrom(this.senderEmail.getEmail());
+            htmlEmail.setAuthentication(this.senderEmail.getUserName(), this.senderEmail.getPassword());
+            htmlEmail.setFrom(this.senderEmail.getFrom());
             if (this.senderEmail.isSsl()) {
                 htmlEmail.setSSLOnConnect(true);
                 htmlEmail.setSslSmtpPort(this.senderEmail.getSmtpPort().toString());
@@ -166,12 +168,27 @@ public class AlertServiceImpl implements AlertService {
         template.setStartTime(DateUtils.format(application.getStartTime(), DateUtils.fullFormat(), TimeZone.getDefault()));
         template.setEndTime(DateUtils.format(application.getEndTime() == null ? new Date() : application.getEndTime(), DateUtils.fullFormat(), TimeZone.getDefault()));
         template.setDuration(DateUtils.toRichTimeDuration(duration));
-        template.setRestart(application.isNeedRestartOnFailed() && application.getRestartCount() > 0);
-        template.setRestartIndex(application.getRestartCount());
-        template.setTotalRestart(application.getRestartSize());
-        template.setCpFailureRateInterval(DateUtils.toRichTimeDuration(application.getCpFailureRateInterval()));
-        template.setCpMaxFailureInterval(application.getCpMaxFailureInterval());
-
+        boolean needRestart = application.isNeedRestartOnFailed() && application.getRestartCount() > 0;
+<<<<<<< HEAD
+        template.setRestart(needRestart);
+        if (needRestart) {
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+        template.setRestart(needRestart);
+        if (needRestart) {
+=======
+        if (needRestart) {
+            template.setRestart(true);
+>>>>>>> 6c7e86fa... [bugfix] sent email "from" parameter bug fixed.
+=======
+        template.setRestart(needRestart);
+        if (needRestart) {
+>>>>>>> 7020adbf... [bugfix] sent email bug fixed.
+>>>>>>> 1b6f8708541574dd542a626cd92f298cc871bd67
+            template.setRestartIndex(application.getRestartCount());
+            template.setTotalRestart(application.getRestartSize());
+        }
         return template;
     }
 
