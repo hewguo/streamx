@@ -92,7 +92,7 @@ public class WebUtils {
     }
 
     public static String getAppHome() {
-        System.setProperty("app.home","/Users/heweiguo/develop/hadoop_runtime/streamx-console-service-1.1.0-SNAPSHOT");
+        System.setProperty("app.home","/Users/heweiguo/develop/hadoop_runtime/streamx-console-service-1.1.0");
         return System.getProperty("app.home");
     }
 

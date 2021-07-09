@@ -100,8 +100,7 @@ CREATE TABLE pvuv_sink (
   'connector.table' = 'pvuv_sink',
   'connector.username' = 'test',
   'connector.password' = 'test',
-  'connector.write.flush.max-rows' = '1',
-  'connector.driverclassname' = 'org.postgresql.Driver'
+  'connector.write.flush.max-rows' = '1'
 );
 INSERT INTO
   pvuv_sink
@@ -113,3 +112,6 @@ FROM
   user_log
 GROUP BY
   DATE_FORMAT(ts, 'yyyy-MM-dd HH:00');
+
+com.streamxhub.streamx.console.base.utils。WebUtil
+        System.setProperty("app.home","/Users/heweiguo/develop/hadoop_runtime/streamx-console-service-1.1.0");
