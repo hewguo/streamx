@@ -1,5 +1,8 @@
 SET FOREIGN_KEY_CHECKS = 0;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1b6f8708541574dd542a626cd92f298cc871bd67
 -- ----------------------------
 -- Table structure for t_setting
 -- ----------------------------
