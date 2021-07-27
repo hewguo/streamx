@@ -1,12 +1,8 @@
 SET FOREIGN_KEY_CHECKS = 0;
-<<<<<<< HEAD
-
-=======
->>>>>>> 1b6f8708541574dd542a626cd92f298cc871bd67
 -- ----------------------------
 -- Table structure for t_setting
 -- ----------------------------
-update `t_setting` set `id` = `id` + 1 where `id` > 6;
+update `t_setting` set `NUM` = `NUM` + 1 where `NUM` > 6;
 
 update `t_setting` set `KEY` = 'alert.email.userName',`TITLE`='Alert  Email User', DESCRIPTION='用来发送告警邮箱的认证用户名' where `KEY` = 'alert.email.address';
 
