@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.streamxhub.streamx</groupId>
     <artifactId>streamx</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <packaging>pom</packaging>
     <name>StreamX Parent</name>
     <description>A magical framework that makes Flink development easier</description>
@@ -63,7 +63,10 @@
 
 
     <properties>
+<<<<<<< HEAD
 
+=======
+>>>>>>> aa1d5ac1543df4b4096b72d340e4107c17a670f4
         <project.build.jdk>1.8</project.build.jdk>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -657,12 +660,15 @@
         </pluginManagement>
 
         <plugins>
+<<<<<<< HEAD
             <!--
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
                 </plugin>
             -->
+=======
+>>>>>>> aa1d5ac1543df4b4096b72d340e4107c17a670f4
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -681,6 +687,16 @@
                 <artifactId>scala-maven-plugin</artifactId>
             </plugin>
 
+<<<<<<< HEAD
+=======
+            <!--
+             <plugin>
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-checkstyle-plugin</artifactId>
+             </plugin>
+            -->
+
+>>>>>>> aa1d5ac1543df4b4096b72d340e4107c17a670f4
             <!-- maven deploy
              <plugin>
                  <groupId>org.apache.maven.plugins</groupId>

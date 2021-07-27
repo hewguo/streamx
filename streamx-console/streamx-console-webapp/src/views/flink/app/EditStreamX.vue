@@ -1423,6 +1423,7 @@ export default {
     },
 
     handleSubmitCustomJob(values) {
+      debugger
       const options = this.handleFormValue(values)
       const format = this.strategy === 1 ? this.app.format : (this.form.getFieldValue('config').endsWith('.properties') ? 2 : 1)
       let config = this.configOverride || this.app.config

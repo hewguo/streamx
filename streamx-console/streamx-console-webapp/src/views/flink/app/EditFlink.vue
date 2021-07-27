@@ -647,7 +647,11 @@ export default {
         module: this.app.module,
         jar: jar
       }).then((resp) => {
+<<<<<<< HEAD
         if(resp.data) {
+=======
+        if (resp.data) {
+>>>>>>> aa1d5ac1543df4b4096b72d340e4107c17a670f4
           this.form.setFieldsValue({ 'mainClass': resp.data })
         }
       }).catch((error) => {

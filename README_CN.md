@@ -198,7 +198,11 @@ StreamX现在离这个目标还有一段距离，还需持续投入，相应的�
 </div>
 
 <div align="center">
+<<<<<<< HEAD
     <img src="http://assets.streamxhub.com/joinus0707.png" alt="Join the Group" width="200"><br>
+=======
+    <img src="http://assets.streamxhub.com/joinus0714.png" alt="Join the Group" width="200"><br>
+>>>>>>> aa1d5ac1543df4b4096b72d340e4107c17a670f4
     <span>扫微信二维码加群讨论</span>
 </div>
 
