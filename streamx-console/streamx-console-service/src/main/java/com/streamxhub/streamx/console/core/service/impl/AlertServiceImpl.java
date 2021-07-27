@@ -170,6 +170,7 @@ public class AlertServiceImpl implements AlertService {
         template.setDuration(DateUtils.toRichTimeDuration(duration));
         boolean needRestart = application.isNeedRestartOnFailed() && application.getRestartCount() > 0;
 <<<<<<< HEAD
+<<<<<<< HEAD
         template.setRestart(needRestart);
         if (needRestart) {
 =======
@@ -186,6 +187,10 @@ public class AlertServiceImpl implements AlertService {
         if (needRestart) {
 >>>>>>> 7020adbf... [bugfix] sent email bug fixed.
 >>>>>>> 1b6f8708541574dd542a626cd92f298cc871bd67
+=======
+        template.setRestart(needRestart);
+        if (needRestart) {
+>>>>>>> aa1d5ac1543df4b4096b72d340e4107c17a670f4
             template.setRestartIndex(application.getRestartCount());
             template.setTotalRestart(application.getRestartSize());
         }

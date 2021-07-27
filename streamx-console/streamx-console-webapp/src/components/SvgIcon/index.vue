@@ -43,6 +43,9 @@
     <moon v-if="name==='moon'"></moon>
     <user v-if="name==='user'"></user>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> aa1d5ac1543df4b4096b72d340e4107c17a670f4
   </span>
 =======
     <user v-if="name==='user'"></user>

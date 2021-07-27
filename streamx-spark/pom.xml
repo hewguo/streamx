@@ -6,7 +6,11 @@
     <parent>
         <groupId>com.streamxhub.streamx</groupId>
         <artifactId>streamx</artifactId>
+<<<<<<< HEAD
         <version>1.1.0</version>
+=======
+        <version>1.1.1</version>
+>>>>>>> aa1d5ac1543df4b4096b72d340e4107c17a670f4
         <relativePath>../pom.xml</relativePath>
     </parent>
 
